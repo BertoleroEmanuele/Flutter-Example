@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
-import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sentry/sentry.dart';
 
 void main() => runApp(MyApp());
 
@@ -11,24 +11,25 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        primarySwatch: Colors.grey,
+        primarySwatch: Colors.amber,
+        
       ),
-      home: MyHomePage(title: 'Segna punti'),
+      home: FirstRoute(title: 'Segna punti'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class FirstRoute extends StatefulWidget {
+  FirstRoute({Key key, this.title}) : super(key: key);
 
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _FirstRouteState createState() => _FirstRouteState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _FirstRouteState extends State<FirstRoute> {
   int _rossi = 0;
   int _blu = 0;
   final _match = 15;
@@ -86,7 +87,19 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title, style: TextStyle(color: Colors.white)),
+        title: Text(widget.title),
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.info),
+              tooltip: 'Search',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SecondRoute()),
+                );
+              },
+            ),
+          ],
       ),
       body:  Center(
         child: Align(
@@ -197,7 +210,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
         ),
-      );
       ),
       floatingActionButton: FloatingActionButton.extended(
         icon: Icon(Icons.cached, color: Colors.white,),
@@ -206,5 +218,51 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: _reset,
       ),
     );
+  }
+}
+
+class SecondRoute extends StatelessWidget implements Exception  {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          tooltip: 'Navigation menu',
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        title: Text("Crediti"),
+      ),
+      body: Center(
+        child: Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Text("Questi sono i crediti"),
+              RaisedButton(
+                onPressed: _debug,
+                child: Text('Non premere'),
+              )
+            ]
+        )
+      ),
+    );
+  }
+
+  final SentryClient sentry = new SentryClient(dsn: "https://1dc1e073142b4acaa9f4bd83508c6834:c9cafdb2f3cc4333b6e654a4e736535b@sentry.io/1480628");
+
+  void _debug() async{
+    try {
+      debugPrint("Ti avevo avvertito");
+      throw new Exception("Ti avevo avvertito");
+    } catch(error, stackTrace) {
+      await sentry.captureException(
+        exception: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 }
