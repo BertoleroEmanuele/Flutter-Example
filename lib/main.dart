@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sentry/sentry.dart';
+import 'package:device_info/device_info.dart';
+import 'dart:io' show Platform;
 
 void main() => runApp(MyApp());
 
@@ -242,6 +244,7 @@ class SecondRoute extends StatelessWidget implements Exception  {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
               Text("Questi sono i crediti"),
+              Text("Versione 0.0.1 - by Emanuele B. & Eugentio G."),
               RaisedButton(
                 onPressed: _debug,
                 child: Text('Non premere'),
@@ -254,11 +257,22 @@ class SecondRoute extends StatelessWidget implements Exception  {
 
   final SentryClient sentry = new SentryClient(dsn: "https://1dc1e073142b4acaa9f4bd83508c6834:c9cafdb2f3cc4333b6e654a4e736535b@sentry.io/1480628");
 
-  void _debug() async{
+  void _debug() async {
     try {
-      debugPrint("Ti avevo avvertito");
-      throw new Exception("Ti avevo avvertito");
-    } catch(error, stackTrace) {
+      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      String message;
+      if (Platform.isAndroid) {
+        AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+        message = 'Running on ${androidInfo.model}';
+      } else if (Platform.isIOS) {
+        IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+        message = 'Running on ${iosInfo.utsname.machine}';
+      } else {
+        message = 'Device type not found';
+      }
+      debugPrint("Ti avevo avvertito - $message");
+      throw new Exception("Ti avevo avvertito - $message");
+    } catch (error, stackTrace) {
       await sentry.captureException(
         exception: error,
         stackTrace: stackTrace,
