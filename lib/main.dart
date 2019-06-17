@@ -2,20 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sentry/sentry.dart';
 import 'package:device_info/device_info.dart';
+import 'package:scoped_model/scoped_model.dart';
 import 'dart:io' show Platform;
 
-void main() => runApp(MyApp());
+void main() {
+  runApp(MyApp(
+    model: CounterModel(),
+  ));
+}
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+  final CounterModel model;
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return ScopedModel<CounterModel>(
+        model: model,
+        child: MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.amber,
-
       ),
+
       home: FirstRoute(title: 'Segna punti'),
     );
   }
@@ -92,7 +100,7 @@ class _FirstRouteState extends State<FirstRoute> {
         title: Text(widget.title),
           actions: <Widget>[
             IconButton(
-              icon: Icon(Icons.info),
+              icon: Icon(Icons.settings),
               tooltip: 'Search',
               onPressed: () {
                 Navigator.push(
@@ -137,7 +145,7 @@ class _FirstRouteState extends State<FirstRoute> {
                                         Center(
                                           child: Padding(
                                             padding: const EdgeInsets.all(2.0),
-                                            child: Text('Squadra rossa', style: TextStyle(fontSize: 18, color: Colors.grey[700])),
+                                            child: Text(CounterModel()._squadraRossa, style: TextStyle(fontSize: 18, color: Colors.grey[700])),
                                           ),
                                         ),
                                       ]
@@ -170,7 +178,7 @@ class _FirstRouteState extends State<FirstRoute> {
                                         Center(
                                           child: Padding(
                                             padding: const EdgeInsets.all(2.0),
-                                            child: Text('Squadra blu', style: TextStyle(fontSize: 18, color: Colors.grey[700])),
+                                            child: Text(CounterModel()._squadraBlu, style: TextStyle(fontSize: 18, color: Colors.grey[700])),
                                           ),
                                         ),
                                       ]
@@ -179,8 +187,10 @@ class _FirstRouteState extends State<FirstRoute> {
                           )
                       ),
                     ),
+
                   ]
               ),
+
               Row(
                 children: <Widget>[
                   const SizedBox(height:33),
@@ -208,7 +218,10 @@ class _FirstRouteState extends State<FirstRoute> {
                     ),
                   ),
                 ],
-              )
+              ),
+
+              //CombinedWidget(),
+               CounterApp(),
             ],
           ),
         ),
@@ -223,7 +236,32 @@ class _FirstRouteState extends State<FirstRoute> {
   }
 }
 
-class SecondRoute extends StatelessWidget implements Exception  {
+
+class SecondRoute extends StatefulWidget  {
+  @override
+  SecondRouteState createState() {
+    return new SecondRouteState();
+  }
+}
+
+class SecondRouteState  extends State<SecondRoute> implements Exception{
+  String _nomeUno = CounterModel()._squadraRossa;
+  String _nomeDue = CounterModel()._squadraBlu;
+
+  TextEditingController _nomeUnoController = TextEditingController();
+  TextEditingController _nomeDueController = TextEditingController();
+
+  void _updateNomeUno(String value) {
+    setState(() {_nomeUno = value;
+    CounterModel().updateNameBlu(value);});
+
+
+  }
+  void _updateNomeDue(String value) {
+    setState(() {_nomeDue = value;
+    CounterModel().updateNameRossa(value);});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -235,7 +273,7 @@ class SecondRoute extends StatelessWidget implements Exception  {
             Navigator.pop(context);
           },
         ),
-        title: Text("Crediti"),
+        title: Text("Impostazioni"),
       ),
       body: Center(
         child: Column(
@@ -243,12 +281,32 @@ class SecondRoute extends StatelessWidget implements Exception  {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: <Widget>[
-              Text("Questi sono i crediti"),
               Text("Versione 0.0.1 - by Emanuele B. & Eugentio G."),
+              Text("Nome 1: $_nomeUno - Nome 2: $_nomeDue"),
               RaisedButton(
                 onPressed: _debug,
-                child: Text('Non premere'),
-              )
+                child: Text('Genera eccezione'),
+              ),
+            SettingWidget(),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                    controller: _nomeUnoController,
+                    onSubmitted: _updateNomeUno,
+                    decoration: InputDecoration(
+                    labelText: 'Squadra 1'),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: _nomeDueController,
+                  onSubmitted: _updateNomeDue,
+                    decoration: InputDecoration(
+                    labelText: 'Squadra 2'),
+            ),
+              ),
+
             ]
         )
       ),
@@ -278,5 +336,94 @@ class SecondRoute extends StatelessWidget implements Exception  {
         stackTrace: stackTrace,
       );
     }
+  }
+}
+
+class CounterModel extends Model  {
+  String _squadraRossa ="aa";
+  String _squadraBlu ="bb";
+
+  String get nomeUno => _squadraRossa;
+  String get nomeDue => _squadraBlu;
+
+  void updateNameRossa(String value) {
+    // First, increment the counter
+    _squadraRossa = value;
+
+    // Then notify all the listeners.
+    notifyListeners();
+  }
+
+  void updateNameBlu(String value) {
+    // First, increment the counter
+    _squadraBlu = value;
+
+    // Then notify all the listeners.
+    notifyListeners();
+  }
+
+  void updateTest() {
+    // First, increment the counter
+    _squadraBlu = "CIAO";
+    _squadraRossa = "CIAO";
+
+    // Then notify all the listeners.
+    notifyListeners();
+  }
+}
+
+class CounterApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ScopedModel<CounterModel>(
+        model: new CounterModel(),
+        child: new Column(children: [
+          new ScopedModelDescendant<CounterModel>(
+            rebuildOnChange: true,
+            builder: (context, child, model) => new Text('${model.nomeUno}'),
+          ),
+        ])
+    );
+  }
+}
+
+/**class CombinedWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return
+    ScopedModelDescendant<CounterModel>(
+        rebuildOnChange: true,
+      builder: (context, child, model) => new Text('${model.nomeUno}'),
+    );
+
+  }
+}*/
+
+class SettingWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return new ScopedModel<CounterModel>(
+        model: new CounterModel(),
+        child: new Column(children: [
+          new ScopedModelDescendant<CounterModel>(
+              rebuildOnChange: true,
+            builder: (context, child, model){
+              return
+                new Column(
+                    children: <Widget>[
+                    RaisedButton(
+                    onPressed:() => model.updateTest(),
+              child: Text(
+              'Imposta nome CIAO',
+              )),
+                      new Text('${model.nomeUno}')
+
+                      ]
+                );
+
+            }
+          ),
+        ])
+    );
   }
 }
