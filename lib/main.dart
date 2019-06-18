@@ -13,7 +13,8 @@ void main() {
 
 class MyApp extends StatelessWidget {
   final CounterModel model;
-
+  const MyApp({Key key, @required this.model}) : super(key: key);
+  
   @override
   Widget build(BuildContext context) {
     return ScopedModel<CounterModel>(
@@ -25,6 +26,7 @@ class MyApp extends StatelessWidget {
       ),
 
       home: FirstRoute(title: 'Segna punti'),
+    ),
     );
   }
 }
