@@ -2,17 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sentry/sentry.dart';
 import 'package:device_info/device_info.dart';
+import 'package:scoped_model/scoped_model.dart';
 import 'dart:io' show Platform;
 
-void main() => runApp(MyApp());
+void main() {
+  runApp(MyApp(
+    model: CounterModel(),
+  ));
+}
 
 class MyApp extends StatelessWidget {
+  final CounterModel model;
+  const MyApp({Key key, @required this.model}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return ScopedModel<CounterModel>(
+        model: model,
+        child: MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(primarySwatch: Colors.amber,),
+      theme: ThemeData(
+        primarySwatch: Colors.amber,
+      ),
+
       home: FirstRoute(title: 'Segna punti'),
+    ),
     );
   }
 }
@@ -34,7 +48,7 @@ class _FirstRouteState extends State<FirstRoute> {
 
   void _segnanoRossi() async{
     setState(() {
-      _rossi++;
+        _rossi++;
       if (_rossi == _match) {
         _generateVincitore("ROSSA", _blu);
       }
@@ -76,7 +90,7 @@ class _FirstRouteState extends State<FirstRoute> {
                 onPressed: () {Navigator.of(context).pop();},
               )
             ]
-        )
+       )
     );
     _reset();
   }
@@ -86,18 +100,18 @@ class _FirstRouteState extends State<FirstRoute> {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
-        actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.settings),
-            tooltip: 'Search',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SecondRoute()),
-              );
-            },
-          ),
-        ],
+          actions: <Widget>[
+            IconButton(
+              icon: Icon(Icons.settings),
+              tooltip: 'Search',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SecondRoute()),
+                );
+              },
+            ),
+          ],
       ),
       body:  Center(
         child: Align(
@@ -133,7 +147,7 @@ class _FirstRouteState extends State<FirstRoute> {
                                         Center(
                                           child: Padding(
                                             padding: const EdgeInsets.all(2.0),
-                                            child: _SquadraRossa(),
+                                            child: Text(CounterModel()._squadraRossa, style: TextStyle(fontSize: 18, color: Colors.grey[700])),
                                           ),
                                         ),
                                       ]
@@ -166,7 +180,7 @@ class _FirstRouteState extends State<FirstRoute> {
                                         Center(
                                           child: Padding(
                                             padding: const EdgeInsets.all(2.0),
-                                            child: _SquadraBlu(),
+                                            child: Text(CounterModel()._squadraBlu, style: TextStyle(fontSize: 18, color: Colors.grey[700])),
                                           ),
                                         ),
                                       ]
@@ -207,6 +221,9 @@ class _FirstRouteState extends State<FirstRoute> {
                   ),
                 ],
               ),
+
+              //CombinedWidget(),
+               ShowWidget(),
             ],
           ),
         ),
@@ -230,19 +247,21 @@ class SecondRoute extends StatefulWidget  {
 }
 
 class SecondRouteState  extends State<SecondRoute> implements Exception{
-  String _squadraRossa = "Squadra Rossa";
-  String _squadraBlu = "Squadra Blu";
+  String _nomeUno = CounterModel()._squadraRossa;
+  String _nomeDue = CounterModel()._squadraBlu;
 
   TextEditingController _nomeUnoController = TextEditingController();
   TextEditingController _nomeDueController = TextEditingController();
 
   void _updateNomeUno(String value) {
-    setState(() {_squadraRossa = value;});
+    setState(() {_nomeUno = value;
+    CounterModel().updateNameBlu(value);});
 
 
   }
   void _updateNomeDue(String value) {
-    setState(() {_squadraBlu = value;});
+    setState(() {_nomeDue = value;
+    CounterModel().updateNameRossa(value);});
   }
 
   @override
@@ -253,44 +272,48 @@ class SecondRouteState  extends State<SecondRoute> implements Exception{
           icon: Icon(Icons.arrow_back),
           tooltip: 'Navigation menu',
           onPressed: () {
-            Navigator.pop(context);
-          },
+    Navigator
+        .of(context)
+        .push(MaterialPageRoute(builder: (context) => FirstRoute()));
+    },
+          //},
         ),
         title: Text("Impostazioni"),
       ),
       body: Center(
-          child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Text("Versione 0.0.1 - by Emanuele B. & Eugentio G."),
-                Text("Nome 1: $_squadraRossa - Nome 2: $_squadraBlu"),
-                RaisedButton(
-                  onPressed: _debug,
-                  child: Text('Genera eccezione'),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
+        child: Column(
+            mainAxisSize: MainAxisSize.max,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Text("Versione 0.0.1 - by Emanuele B. & Eugentio G."),
+              Text("Nome 1: $_nomeUno - Nome 2: $_nomeDue"),
+              RaisedButton(
+                onPressed: _debug,
+                child: Text('Genera eccezione'),
+              ),
+            SettingWidget(),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
                     controller: _nomeUnoController,
                     onSubmitted: _updateNomeUno,
                     decoration: InputDecoration(
-                        labelText: 'Squadra Rossa'),
-                  ),
+                    labelText: 'Squadra 1'),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: _nomeDueController,
-                    onSubmitted: _updateNomeDue,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: _nomeDueController,
+                  onSubmitted: _updateNomeDue,
                     decoration: InputDecoration(
-                        labelText: 'Squadra Blu'),
-                  ),
-                ),
+                    labelText: 'Squadra 2'),
+            ),
+              ),
 
-              ]
-          )
+            ]
+        )
       ),
     );
   }
@@ -321,34 +344,90 @@ class SecondRouteState  extends State<SecondRoute> implements Exception{
   }
 }
 
-class _SquadraRossa extends StatelessWidget {
+class CounterModel extends Model  {
+  String _squadraRossa ="aa";
+  String _squadraBlu ="bb";
 
+  String get nomeUno => _squadraRossa;
+  String get nomeDue => _squadraBlu;
+
+  void updateNameRossa(String value) {
+    // First, increment the counter
+    _squadraRossa = value;
+
+    // Then notify all the listeners.
+   // notifyListeners();
+  }
+
+  void updateNameBlu(String value) {
+    // First, increment the counter
+    _squadraBlu = value;
+
+    // Then notify all the listeners.
+  //  notifyListeners();
+  }
+
+  void updateTest() {
+    // First, increment the counter
+    _squadraBlu = "CIAO";
+    _squadraRossa = "CIAO";
+
+    // Then notify all the listeners.
+    notifyListeners();
+  }
+}
+
+class ShowWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(
-        child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(SecondRouteState()._squadraRossa,
-                  style: TextStyle(fontSize: 18, color: Colors.grey[700])),
-            ]
-        )
+    return ScopedModel<CounterModel>(
+        model: new CounterModel(),
+        child: new Column(children: [
+          new ScopedModelDescendant<CounterModel>(
+            rebuildOnChange: true,
+            builder: (context, child, model) => new Text('${model.nomeUno}'),
+          ),
+        ])
     );
   }
 }
 
-class _SquadraBlu extends StatelessWidget {
-
+/**class CombinedWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(
-        child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(SecondRouteState()._squadraBlu,
-                  style: TextStyle(fontSize: 18, color: Colors.grey[700])),
-            ]
-        )
+    return
+    ScopedModelDescendant<CounterModel>(
+        rebuildOnChange: true,
+      builder: (context, child, model) => new Text('${model.nomeUno}'),
+    );
+
+  }
+}*/
+
+class SettingWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return new ScopedModel<CounterModel>(
+        model: new CounterModel(),
+        child: new Column(children: [
+          new ScopedModelDescendant<CounterModel>(
+              rebuildOnChange: true,
+            builder: (context, child, model){
+              return
+                new Column(
+                    children: <Widget>[
+                    RaisedButton(
+                    onPressed:() => model.updateTest(),
+              child: Text(
+              'Imposta nome CIAO',
+              )),
+                      new Text('${model.nomeUno}')
+                      ]
+                );
+
+            }
+          ),
+        ])
     );
   }
 }
