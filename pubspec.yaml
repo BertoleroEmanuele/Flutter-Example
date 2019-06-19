@@ -25,7 +25,6 @@ dependencies:
   cupertino_icons: ^0.1.2
   sentry: any
   device_info: any
-  scoped_model: any
   provider: any
 
 dev_dependencies:
