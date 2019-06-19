@@ -7,13 +7,20 @@ import 'dart:io' show Platform;
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
+<<<<<<< HEAD
 
+=======
+  final CounterModel model;
+  const MyApp({Key key, @required this.model}) : super(key: key);
+  
+>>>>>>> 5dfba07c8ec7f9221e3b375d614221f92662de48
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(primarySwatch: Colors.amber,),
       home: FirstRoute(title: 'Segna punti'),
+    ),
     );
   }
 }
@@ -353,4 +360,7 @@ class _SquadraBlu extends StatelessWidget {
     );
   }
 }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 5dfba07c8ec7f9221e3b375d614221f92662de48
